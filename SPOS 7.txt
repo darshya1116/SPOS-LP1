@@ -1,0 +1,245 @@
+
+
+                                      Practical 7
+
+
+# Optimal Page Replacement
+def optimal_page_replacement(pages, frame_size):
+    frames = []
+    page_faults = 0
+    hits = 0
+    table = []
+
+    for i in range(len(pages)):
+        if pages[i] not in frames:
+            if len(frames) < frame_size:
+                frames.append(pages[i])
+            else:
+                # Find the page that will not be used for the longest period of time
+                future = pages[i + 1:]
+                farthest_use = -1
+                index_to_replace = -1
+                for f in frames:
+                    if f not in future:
+                        index_to_replace = frames.index(f)
+                        break
+                    else:
+                        use_index = future.index(f)
+                        if use_index > farthest_use:
+                            farthest_use = use_index
+                            index_to_replace = frames.index(f)
+
+                frames[index_to_replace] = pages[i]
+
+            page_faults += 1
+            table.append(("F", list(frames)))
+        else:
+            hits += 1
+            table.append(("H", list(frames)))
+
+    display_result(table, frame_size)
+    display_statistics(hits, page_faults, len(pages))
+
+# FIFO Page Replacement
+def fifo_page_replacement(pages, frame_size):
+    frames = []
+    page_faults = 0
+    hits = 0
+    index = 0
+    table = []
+
+    for page in pages:
+        if page not in frames:
+            if len(frames) < frame_size:
+                frames.append(page)
+            else:
+                frames[index] = page
+                index = (index + 1) % frame_size
+            page_faults += 1
+            table.append(("F", list(frames)))
+        else:
+            hits += 1
+            table.append(("H", list(frames)))
+
+    display_result(table, frame_size)
+    display_statistics(hits, page_faults, len(pages))
+
+# LRU Page Replacement
+def lru_page_replacement(pages, frame_size):
+    frames = []
+    page_faults = 0
+    hits = 0
+    table = []
+    recent_usage = []
+
+    for page in pages:
+        if page not in frames:
+            if len(frames) < frame_size:
+                frames.append(page)
+            else:
+                # Find the least recently used page
+                lru_page = recent_usage.pop(0)
+                lru_index = frames.index(lru_page)
+                frames[lru_index] = page
+            page_faults += 1
+            table.append(("F", list(frames)))
+        else:
+            hits += 1
+            recent_usage.remove(page)  # Update recent usage
+
+        recent_usage.append(page)  # Add current page to recent usage
+        table.append(("H", list(frames)) if page in frames else ("F", list(frames)))
+
+    display_result(table, frame_size)
+    display_statistics(hits, page_faults, len(pages))
+
+# Display Table in Horizontal Format
+def display_result(table, frame_size):
+    print("F/H:  ", end="")
+    for status, _ in table:
+        print(f"{status}  ", end="")
+    print("\n-------------------------")
+    
+    for i in range(frame_size):
+        print(f"Frame {i+1}: ", end="")
+        for _, f in table:
+            if i < len(f):
+                print(f"{f[i]}  ", end="")
+            else:
+                print("-  ", end="")
+        print()
+
+# Display Statistics
+def display_statistics(hits, page_faults, total_accesses):
+    hit_ratio = hits / total_accesses * 100
+    fault_ratio = page_faults / total_accesses * 100
+    print(f"\nPage Fault: {page_faults}")
+    print(f"Page Hit: {hits}")
+    print(f"Hit Ratio: {hit_ratio:.2f}%")
+    print(f"Fault Ratio: {fault_ratio:.2f}%")
+
+# Main function to simulate page replacement algorithms
+def main():
+    while True:
+        print("\nPage Replacement Algorithm Simulator")
+        print("1. FIFO Page Replacement")
+        print("2. LRU Page Replacement")
+        print("3. Optimal Page Replacement")
+        print("4. Exit")
+        choice = int(input("Enter your choice (1-4): "))
+        
+        if choice == 4:
+            print("Exiting...")
+            break
+
+        n_pages = int(input("Enter the number of pages you want to enter: "))
+        pages = list(map(int, input("Enter the pages (space-separated): ").split()))
+        frame_size = int(input("Enter the capacity of frames: "))
+
+        if choice == 1:
+            print("\nFIFO Page Replacement\n")
+            fifo_page_replacement(pages, frame_size)
+        elif choice == 2:
+            print("\nLRU Page Replacement\n")
+            lru_page_replacement(pages, frame_size)
+        elif choice == 3:
+            print("\nOptimal Page Replacement\n")
+            optimal_page_replacement(pages, frame_size)
+        else:
+            print("Invalid choice. Please enter 1-4.")
+
+# Run the main program
+if __name__ == "__main__":
+    main()
+
+
+
+OUTPUT : 
+
+Page Replacement Algorithm Simulator
+1. FIFO Page Replacement
+2. LRU Page Replacement
+3. Optimal Page Replacement
+4. Exit
+Enter your choice (1-4): 1
+Enter the number of pages you want to enter: 20 
+Enter the pages (space-separated): 1 2 3 4 5 6 7 8 9 9 6 5 4 3 3 2 2 1 3 4
+Enter the capacity of frames: 3
+
+FIFO Page Replacement
+
+F/H:  F  F  F  F  F  F  F  F  F  H  F  F  F  F  H  F  H  F  H  F  
+-------------------------
+Frame 1: 1  1  1  4  4  4  7  7  7  7  6  6  6  3  3  3  3  3  3  4  
+Frame 2: -  2  2  2  5  5  5  8  8  8  8  5  5  5  5  2  2  2  2  2  
+Frame 3: -  -  3  3  3  6  6  6  9  9  9  9  4  4  4  4  4  1  1  1  
+
+Page Fault: 16
+Page Hit: 4
+Hit Ratio: 20.00%
+Fault Ratio: 80.00%
+
+Page Replacement Algorithm Simulator
+1. FIFO Page Replacement
+2. LRU Page Replacement
+3. Optimal Page Replacement
+4. Exit
+Enter your choice (1-4): 2
+Enter the number of pages you want to enter: 20 
+Enter the pages (space-separated): 1 2 3 4 7 6 5 4 3 7 8 2 1 5 6 9 2 3 7 9 
+Enter the capacity of frames: 3
+
+LRU Page Replacement
+
+F/H:  F  H  F  H  F  H  F  H  F  H  F  H  F  H  F  H  F  H  F  H  F  H  F  H  F  H  F  H  F  H  F  H  F  H  F  H  F  H  F  H  
+-------------------------
+Frame 1: 1  1  1  1  1  1  4  4  4  4  4  4  5  5  5  5  5  5  7  7  7  7  7  7  1  1  1  1  1  1  9  9  9  9  9  9  7  7  7  7  
+Frame 2: -  -  2  2  2  2  2  2  7  7  7  7  7  7  4  4  4  4  4  4  8  8  8  8  8  8  5  5  5  5  5  5  2  2  2  2  2  2  9  9  
+Frame 3: -  -  -  -  3  3  3  3  3  3  6  6  6  6  6  6  3  3  3  3  3  3  2  2  2  2  2  2  6  6  6  6  6  6  3  3  3  3  3  3  
+
+Page Fault: 20
+Page Hit: 0
+Hit Ratio: 0.00%
+Fault Ratio: 100.00%
+
+Page Replacement Algorithm Simulator
+1. FIFO Page Replacement
+2. LRU Page Replacement
+3. Optimal Page Replacement
+4. Exit
+
+
+Page Replacement Algorithm Simulator
+1. FIFO Page Replacement
+2. LRU Page Replacement
+3. Optimal Page Replacement
+4. Exit
+Enter your choice (1-4): 3
+Enter the number of pages you want to enter: 10
+Enter the pages (space-separated): 2 4 5 6 7 8 9 1 3 0 
+Enter the capacity of frames: 3
+
+Optimal Page Replacement
+
+F/H:  F  F  F  F  F  F  F  F  F  F  
+-------------------------
+Frame 1: 2  2  2  6  7  8  9  1  3  0  
+Frame 2: -  4  4  4  4  4  4  4  4  4  
+Frame 3: -  -  5  5  5  5  5  5  5  5  
+
+Page Fault: 10
+Page Hit: 0
+Hit Ratio: 0.00%
+Fault Ratio: 100.00%
+
+Page Replacement Algorithm Simulator
+1. FIFO Page Replacement
+2. LRU Page Replacement
+3. Optimal Page Replacement
+4. Exit
+Enter your choice (1-4): 4
+Exiting...
+
+
+...Program finished with exit code 0
+Press ENTER to exit console.

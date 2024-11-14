@@ -1,0 +1,233 @@
+
+                                 Practical 6 
+class MemoryBlock:
+    def __init__(self, size):
+        self.size = size
+        self.is_allocated = False
+        self.process_number = -1  # Track which process is allocated
+
+class MemoryManager:
+    def __init__(self, block_sizes):
+        """Initialize memory manager with a list of block sizes."""
+        self.blocks = [MemoryBlock(size) for size in block_sizes]
+        self.next_fit_index = 0  # For next fit strategy
+
+    def first_fit(self, request_size, process_number):
+        """Allocate memory using the First Fit strategy."""
+        for block in self.blocks:
+            if not block.is_allocated and block.size >= request_size:
+                block.is_allocated = True
+                block.process_number = process_number
+                return True
+        return False
+
+    def best_fit(self, request_size, process_number):
+        """Allocate memory using the Best Fit strategy."""
+        best_block = None
+        for block in self.blocks:
+            if not block.is_allocated and block.size >= request_size:
+                if best_block is None or block.size < best_block.size:
+                    best_block = block
+        if best_block:
+            best_block.is_allocated = True
+            best_block.process_number = process_number
+            return True
+        return False
+
+    def worst_fit(self, request_size, process_number):
+        """Allocate memory using the Worst Fit strategy."""
+        worst_block = None
+        for block in self.blocks:
+            if not block.is_allocated and block.size >= request_size:
+                if worst_block is None or block.size > worst_block.size:
+                    worst_block = block
+        if worst_block:
+            worst_block.is_allocated = True
+            worst_block.process_number = process_number
+            return True
+        return False
+
+    def next_fit(self, request_size, process_number):
+        """Allocate memory using the Next Fit strategy."""
+        start_index = self.next_fit_index
+        for i in range(len(self.blocks)):
+            block_index = (start_index + i) % len(self.blocks)
+            block = self.blocks[block_index]
+            if not block.is_allocated and block.size >= request_size:
+                block.is_allocated = True
+                block.process_number = process_number
+                self.next_fit_index = (block_index + 1) % len(self.blocks)
+                return True
+        return False
+
+    def display_memory(self):
+        """Display the memory blocks and their allocation status."""
+        print("\nMemory Allocation Table:")
+        print(f"{'Process No':<12} {'Process Size':<12} {'Block No':<12} {'Block Size':<12}")
+        print("-" * 48)
+        for block_index, block in enumerate(self.blocks):
+            if block.is_allocated:
+                print(f"{block.process_number + 1:<12} {processes[block.process_number]:<12} "
+                      f"{block_index + 1:<12} {block.size:<12}")
+        print("-" * 48)
+        print("Unallocated Memory Blocks:")
+        for block_index, block in enumerate(self.blocks):
+            if not block.is_allocated:
+                print(f"Block {block_index + 1}: Size = {block.size}")
+
+def main():
+    print("Enter the number of memory blocks:")
+    num_blocks = int(input())
+    block_sizes = []
+    
+    for i in range(num_blocks):
+        size = int(input(f"Enter size for block {i + 1}: "))
+        block_sizes.append(size)
+
+    print("Enter the number of processes:")
+    num_processes = int(input())
+    
+    global processes
+    processes = []
+    for i in range(num_processes):
+        size = int(input(f"Enter memory size required for process {i + 1}: "))
+        processes.append(size)
+
+    memory_manager = MemoryManager(block_sizes)
+
+    while True:
+        print("\nChoose an allocation algorithm:")
+        print("1. First Fit")
+        print("2. Best Fit")
+        print("3. Worst Fit")
+        print("4. Next Fit")
+        print("5. Exit")
+
+        choice = input("Enter your choice (1-5): ")
+
+        if choice in {'1', '2', '3', '4'}:
+            process_index = int(input(f"Select a process index to allocate (1 to {num_processes}): ")) - 1
+            if 0 <= process_index < num_processes:
+                request_size = processes[process_index]
+                if choice == '1':
+                    memory_manager.first_fit(request_size, process_index)
+                elif choice == '2':
+                    memory_manager.best_fit(request_size, process_index)
+                elif choice == '3':
+                    memory_manager.worst_fit(request_size, process_index)
+                elif choice == '4':
+                    memory_manager.next_fit(request_size, process_index)
+                memory_manager.display_memory()  # Display memory after each allocation
+            else:
+                print("Invalid process index.")
+        elif choice == '5':
+            print("Exiting...")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
+
+OUTPUT : 
+
+Enter the number of memory blocks:
+4
+Enter size for block 1: 121
+Enter size for block 2: 234
+Enter size for block 3: 213
+Enter size for block 4: 432
+Enter the number of processes:
+3
+Enter memory size required for process 1: 342
+Enter memory size required for process 2: 123
+Enter memory size required for process 3: 324
+
+Choose an allocation algorithm:
+1. First Fit
+2. Best Fit
+3. Worst Fit
+4. Next Fit
+5. Exit
+Enter your choice (1-5): 1
+Select a process index to allocate (1 to 3): 1
+
+Memory Allocation Table:
+Process No   Process Size Block No     Block Size  
+------------------------------------------------
+1            342          4            432         
+------------------------------------------------
+Unallocated Memory Blocks:
+Block 1: Size = 121
+Block 2: Size = 234
+Block 3: Size = 213
+
+Choose an allocation algorithm:
+1. First Fit
+2. Best Fit
+3. Worst Fit
+4. Next Fit
+5. Exit
+Enter your choice (1-5): 2
+Select a process index to allocate (1 to 3): 2
+
+Memory Allocation Table:
+Process No   Process Size Block No     Block Size  
+------------------------------------------------
+2            123          3            213         
+1            342          4            432         
+------------------------------------------------
+Unallocated Memory Blocks:
+Block 1: Size = 121
+Block 2: Size = 234
+
+Choose an allocation algorithm:
+1. First Fit
+2. Best Fit
+3. Worst Fit
+4. Next Fit
+5. Exit
+Enter your choice (1-5): 3
+Select a process index to allocate (1 to 3): 3
+
+Memory Allocation Table:
+Process No   Process Size Block No     Block Size  
+------------------------------------------------
+2            123          3            213         
+1            342          4            432         
+------------------------------------------------
+Unallocated Memory Blocks:
+Block 1: Size = 121
+Block 2: Size = 234
+
+Choose an allocation algorithm:
+1. First Fit
+2. Best Fit
+3. Worst Fit
+4. Next Fit
+5. Exit
+Enter your choice (1-5): 4
+Select a process index to allocate (1 to 3): 2
+
+Memory Allocation Table:
+Process No   Process Size Block No     Block Size  
+------------------------------------------------
+2            123          2            234         
+2            123          3            213         
+1            342          4            432         
+------------------------------------------------
+Unallocated Memory Blocks:
+Block 1: Size = 121
+
+Choose an allocation algorithm:
+1. First Fit
+2. Best Fit
+3. Worst Fit
+4. Next Fit
+5. Exit
+Enter your choice (1-5): 5
+Exiting...
+
+
+...Program finished with exit code 0
+Press ENTER to exit console.
